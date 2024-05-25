@@ -247,7 +247,7 @@ void printNaoExpandidosIDS(std::deque<Node*> queue_src, string mensagem) {
     }
 } // fim do metodo printNaoExpandidosIDS
 
-
+// metodo que printa caminho do no ate a raiz
 void printCaminhoProNo(Node *no_parente) {
     Node* new_parent_debug = no_parente;
     while(new_parent_debug->getWeight() != -1) {
@@ -330,6 +330,7 @@ void liberarMemoria(Node* no) {
     delete no;
 } // fim do metodo que liberarMemoria
 
+// metodo que verifica se insercao eh valida baseada na posicao
 bool insercaoEhValidaNaPosicao(int possivel_numero, int pos_x, int pos_y, const Matrix &sudoku_board) {
     if(possivel_numero == 0 || sudoku_board[pos_x][pos_y] != 0) {
         return false;
@@ -337,6 +338,7 @@ bool insercaoEhValidaNaPosicao(int possivel_numero, int pos_x, int pos_y, const 
     return true;
 }
 
+// metodo que verifica se insercao eh valida baseado nos parentes ja inseridos
 bool insercaoEhValidaPorParentes(int possivel_numero, int pos_x, int pos_y, const Matrix &sudoku_board, const Node* no_parente) {
     while(no_parente->getWeight() != -1) {
         if(mesmaSubdivisao(no_parente->getIPosition(), no_parente->getJPosition(), pos_x, pos_y) ||
