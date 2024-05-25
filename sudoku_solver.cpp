@@ -558,45 +558,26 @@ void verifica_insercao_correta(Matrix &sudoku_board,  Matrix &linha_numeros_poss
     printMatrix(numeros_possiveis, "Matriz numeros_possiveis Final:");
 } // fim do metodo verifica_insercao_correta
 
-// metodo que inicia o programa
-int main(int argc, char **argv) {
-    
-    // invalidando algumas entradas ruins
+bool validateInputParameters(int argc, char **argv) {
     if((argc != (2+QUANT_LINHAS) && argc != 3) || (argc == 3 && (strlen(argv[2]) != (QUANT_LINHAS * QUANT_COLUNAS)))) {
         cout<<"Uso incorreto dos parametros de entrada!"<<endl;
         cout<<"Uso correto: TP1 [inicial do algoritmo de pesquisa] [configuracao sudoku em " << (QUANT_LINHAS * QUANT_COLUNAS) << " numeros separados por espaço a cada " << QUANT_LINHAS << " numeros]" << endl; 
-        return 1;
+        return false;
     } else {
         if(argc == (2+QUANT_LINHAS)) {
             for(int i = 2; i < argc; i++) { 
                 if(strlen(argv[i]) != QUANT_COLUNAS) {
                     cout<<"Uso incorreto dos parametros de entrada!"<<endl;
                     cout<<"Uso correto: TP1 [inicial do algoritmo de pesquisa] [configuracao sudoku em " << (QUANT_LINHAS * QUANT_COLUNAS) << " numeros separados por espaço a cada " << QUANT_LINHAS << " numeros] e " << argv[i] << " possi apenas " << strlen(argv[i]) << " numeros!" << endl; 
-                    return 1;
+                    return false;
                 }
             }
         }
     }
+    return true;
+}
 
-    // criando matrizes de interesse
-    Matrix sudoku_board(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
-    Matrix linha_numeros_possiveis(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
-    Matrix coluna_numeros_possiveis(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
-
-    // criando lista de locais vazios para travessia facilitada e contador de posicoes vazias
-    vector<pair<int, int>> vec_posicoes_vazias;
-    int quant_posicoes_vazias = 0;
-
-    // preenchendo matrizes com possiveis numeros para espacos vazios
-    // os numeros abaixo sao todos os de 1 a 9 pois nao ha nenhum numero do sudoku inserido ate entao
-    for(int i = 0; i < QUANT_LINHAS; i++) {
-        for(int j = 0; j < QUANT_COLUNAS; j++) {
-            linha_numeros_possiveis[i][j] = j+1;
-            coluna_numeros_possiveis[i][j] = j+1;
-        }
-    }
-    
-    // inserindo matriz do sudoku lido e restringindo opcoes de numeros possiveis
+void initializeSudokuBoard(Matrix &sudoku_board, Matrix &linha_numeros_possiveis, Matrix &coluna_numeros_possiveis, vector<pair<int, int>> &vec_posicoes_vazias, int &quant_posicoes_vazias, int argc, char **argv) {
     int k = 0;
     for(int i = 0; i < QUANT_LINHAS; i++) {
         for(int j = 0; j < QUANT_COLUNAS; j++) {
@@ -614,20 +595,28 @@ int main(int argc, char **argv) {
             }
         }
     }    
+}
 
-    // excluindo numeros a partir das linhas e colunas
-    Matrix numeros_possiveis(quant_posicoes_vazias, vector<int>(QUANT_COLUNAS, 0));
-    for(int i = 0; i < quant_posicoes_vazias; i++) {
+void excludeNumbersBasedOnRows(Matrix &numeros_possiveis, const Matrix &linha_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
+    for(int i = 0; i < vec_posicoes_vazias.size(); i++) {
         for(int j = 0; j < QUANT_COLUNAS; j++) {
             numeros_possiveis[i][j] = linha_numeros_possiveis[vec_posicoes_vazias[i].first][j];
+        }
+    }
+}
+
+void excludeNumbersBasedOnColumns(Matrix &numeros_possiveis, const Matrix &coluna_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
+    for(int i = 0; i < vec_posicoes_vazias.size(); i++) {
+        for(int j = 0; j < QUANT_COLUNAS; j++) {
             if(coluna_numeros_possiveis[vec_posicoes_vazias[i].second][j] == 0) {
                 numeros_possiveis[i][j] = 0;
             }
         }
     }
+}
 
-    // excluindo numeros a partir das subdivisoes
-    for(int k = 0; k < quant_posicoes_vazias; k++) {
+void excludeNumbersBasedOnSubdivisions(Matrix &numeros_possiveis, const Matrix &sudoku_board, const vector<pair<int, int>> &vec_posicoes_vazias) {
+    for(int k = 0; k < vec_posicoes_vazias.size(); k++) {
         int i_start_pos = vec_posicoes_vazias[k].first - (vec_posicoes_vazias[k].first % TAMANHO_SUBDVISOES_LINHAS);
         int i_end_pos = i_start_pos + TAMANHO_SUBDVISOES_LINHAS - 1;
         int j_start_pos = vec_posicoes_vazias[k].second - (vec_posicoes_vazias[k].second  % TAMANHO_SUBDVISOES_COLUNAS);
@@ -640,30 +629,54 @@ int main(int argc, char **argv) {
             }
         }
     }
+}
 
-    // printando matrizes para verificar insercao
+int main(int argc, char **argv) {
+
+    if (!validateInputParameters(argc, argv)) {
+        return 1;
+    }
+
+    Matrix sudoku_board(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
+    Matrix linha_numeros_possiveis(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
+    Matrix coluna_numeros_possiveis(QUANT_LINHAS, vector<int>(QUANT_COLUNAS, 0));
+    vector<pair<int, int>> vec_posicoes_vazias;
+    int quant_posicoes_vazias = 0;
+
+    for(int i = 0; i < QUANT_LINHAS; i++) {
+        for(int j = 0; j < QUANT_COLUNAS; j++) {
+            linha_numeros_possiveis[i][j] = j+1;
+            coluna_numeros_possiveis[i][j] = j+1;
+        }
+    }
+
+    initializeSudokuBoard(sudoku_board, linha_numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias, quant_posicoes_vazias, argc, argv);
+
+    Matrix numeros_possiveis(quant_posicoes_vazias, vector<int>(QUANT_COLUNAS, 0));
+    excludeNumbersBasedOnRows(numeros_possiveis, linha_numeros_possiveis, vec_posicoes_vazias);
+    excludeNumbersBasedOnColumns(numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias);
+    excludeNumbersBasedOnSubdivisions(numeros_possiveis, sudoku_board, vec_posicoes_vazias);
+
     verifica_insercao_correta(sudoku_board, linha_numeros_possiveis, coluna_numeros_possiveis, numeros_possiveis);
 
-    // executando algoritmos de busca e printando resultado final
     int quant_estados_espandidos = 0;
-    auto inicio_tempo_programa = std::chrono::high_resolution_clock::now(); // inicio da contagem do tempo
+    auto inicio_tempo_programa = std::chrono::high_resolution_clock::now(); 
     switch(argv[1][0])  {
         case 'B':
             cout<< "Selected: breadth_first_search\n" << endl;
-            quant_estados_espandidos = breadth_first_search(sudoku_board, vec_posicoes_vazias, quant_posicoes_vazias, numeros_possiveis); // TERMINA - SOLUCAO ERRADA
+            quant_estados_espandidos = breadth_first_search(sudoku_board, vec_posicoes_vazias, quant_posicoes_vazias, numeros_possiveis); 
             break;
         case 'I':
             cout<< "Selected: iterative_deepening_seach\n" << endl;
-            quant_estados_espandidos = iterative_deepening_seach(sudoku_board, vec_posicoes_vazias, quant_posicoes_vazias, numeros_possiveis); // TERMINA - SOLUCAO ERRADA
+            quant_estados_espandidos = iterative_deepening_seach(sudoku_board, vec_posicoes_vazias, quant_posicoes_vazias, numeros_possiveis); 
             break;
         default:
             cout<<"Algoritmo invalido. Escolha entre: Breadth-first search e Iterative deepening search" << endl;
     }
-    auto fim_tempo_programa = std::chrono::high_resolution_clock::now(); // fim da contagem do tempo
-    std::chrono::duration<double,std::milli> total_tempo_programa = fim_tempo_programa - inicio_tempo_programa; // calculo do tempo decorrido em milissegundos
+    auto fim_tempo_programa = std::chrono::high_resolution_clock::now(); 
+    std::chrono::duration<double,std::milli> total_tempo_programa = fim_tempo_programa - inicio_tempo_programa; 
     cout<<"Count is: "<<total_tempo_programa.count()<<endl;
     printResultado(quant_estados_espandidos, total_tempo_programa.count(), sudoku_board);
 
     return 0;
-
-} // fim da main
+}

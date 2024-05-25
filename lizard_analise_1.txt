@@ -1,0 +1,53 @@
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+       1      1     36      4       1 Node::Node@41-41@sudoku_solver.cpp
+       1      1     45      5       1 Node::Node@44-44@sudoku_solver.cpp
+       5      2     17      0       5 Node::~Node@47-51@sudoku_solver.cpp
+       3      1     15      1       3 Node::addChild@54-56@sudoku_solver.cpp
+       3      1      9      0       3 Node::getParent@59-61@sudoku_solver.cpp
+       3      1      9      0       3 Node::getChildren@64-66@sudoku_solver.cpp
+       3      1      9      0       3 Node::getIPosition@69-71@sudoku_solver.cpp
+       3      1      9      0       3 Node::getJPosition@74-76@sudoku_solver.cpp
+       3      1      9      0       3 Node::getNivel@79-81@sudoku_solver.cpp
+       3      1      9      0       3 Node::getWeight@84-86@sudoku_solver.cpp
+      14      4    129      1      24 Node::printTree2@89-112@sudoku_solver.cpp
+      11      4     83      1      18 Node::printTree@115-132@sudoku_solver.cpp
+       4      3     57      2       4 level_compare::operator ( )@177-180@sudoku_solver.cpp
+      11      3    117      2      11 printMatrix@184-194@sudoku_solver.cpp
+      11      3     91      3      11 printResultado@197-207@sudoku_solver.cpp
+      11      5    103      3      11 printVetor@210-220@sudoku_solver.cpp
+       5      2     21      1       5 testPrint@223-227@sudoku_solver.cpp
+      14      6    138      2      14 printNaoExpandidosBFS@230-243@sudoku_solver.cpp
+      17      9    175      2      17 printNaoExpandidosIDS@247-263@sudoku_solver.cpp
+       7      2     73      1       7 printCaminhoProNo@265-271@sudoku_solver.cpp
+      13      4    102      2      13 preencherMatrixResultado3@274-286@sudoku_solver.cpp
+      11      4     78      2      11 preencherMatrixResultado2@289-299@sudoku_solver.cpp
+       9      3     69      2       9 preencherMatrixResultado1@302-310@sudoku_solver.cpp
+       4      2     22      2       4 menor@313-316@sudoku_solver.cpp
+       4      2     22      2       4 maior@319-322@sudoku_solver.cpp
+      10      5     90      4      10 mesmaSubdivisao@325-334@sudoku_solver.cpp
+       9      3     40      1       9 liberarMemoria@337-345@sudoku_solver.cpp
+      26      9    160      5      26 insercaoEhValida@348-373@sudoku_solver.cpp
+      23      4    200      5      23 expandirNoBFS@376-398@sudoku_solver.cpp
+      25      4    175      4      47 breadth_first_search@401-447@sudoku_solver.cpp
+      23      4    204      6      23 expandirNoDFS@450-472@sudoku_solver.cpp
+      50     13    389      4      77 iterative_deepening_seach@475-551@sudoku_solver.cpp
+       6      1     48      4       6 verifica_insercao_correta@554-559@sudoku_solver.cpp
+      87     23    880      2     108 main@562-669@sudoku_solver.cpp
+1 file analyzed.
+==============================================================
+NLOC    Avg.NLOC  AvgCCN  Avg.token  function_cnt    file
+--------------------------------------------------------------
+    484      12.7     3.9      106.9        34     sudoku_solver.cpp
+
+===========================================================================================================
+!!!! Warnings (cyclomatic_complexity > 15 or length > 1000 or nloc > 1000000 or parameter_count > 100) !!!!
+================================================
+  NLOC    CCN   token  PARAM  length  location  
+------------------------------------------------
+      87     23    880      2     108 main@562-669@sudoku_solver.cpp
+==========================================================================================
+Total nloc   Avg.NLOC  AvgCCN  Avg.token   Fun Cnt  Warning cnt   Fun Rt   nloc Rt
+------------------------------------------------------------------------------------------
+       484      12.7     3.9      106.9       34            1      0.03    0.20
