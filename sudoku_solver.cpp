@@ -344,33 +344,36 @@ void liberarMemoria(Node* no) {
     delete no;
 } // fim do metodo que liberarMemoria
 
-// metodo que checa se uma possivel insercao eh valida
-bool insercaoEhValida(int possivel_numero, int pos_x, int pos_y, Matrix &sudoku_board, Node *no_parente) {
-    bool debug_insercao_valida = false;
-    if(possivel_numero == 0) { // checando se insercao deste numero eh valida de acordo com numeros possiveis iniciais
+bool insercaoEhValidaNaPosicao(int possivel_numero, int pos_x, int pos_y, const Matrix &sudoku_board) {
+    if(possivel_numero == 0 || sudoku_board[pos_x][pos_y] != 0) {
         return false;
-    } else {
-        if(sudoku_board[pos_x][pos_y] != 0) { // nao posso inserir em local que ja possui numero
-            return false;
-        } else {
-            while(no_parente->getWeight() != -1) {
-                if(mesmaSubdivisao(no_parente->getIPosition(), no_parente->getJPosition(), pos_x, pos_y)) { // se na mesma divisao nao pode ter numeros repetidos
-                    if(no_parente->getWeight() == possivel_numero) {
-                        return false;
-                    }
-                } else {
-                    if(no_parente->getIPosition() == pos_x || no_parente->getJPosition() == pos_y) { // se nao esta na mesma divisao porem esta na mesma linha ou coluna nao pode ter numeros repetidos 
-                        if(no_parente->getWeight() == possivel_numero) {
-                            return false;
-                        }
-                    } 
-                }
-                no_parente = no_parente->getParent();
-            }
-        }
     }
     return true;
-} // fim do metodo que insercaoEhValida
+}
+
+bool insercaoEhValidaPorParentes(int possivel_numero, int pos_x, int pos_y, const Matrix &sudoku_board, const Node* no_parente) {
+    while(no_parente->getWeight() != -1) {
+        if(mesmaSubdivisao(no_parente->getIPosition(), no_parente->getJPosition(), pos_x, pos_y) ||
+           no_parente->getIPosition() == pos_x || no_parente->getJPosition() == pos_y) {
+            if(no_parente->getWeight() == possivel_numero) {
+                return false;
+            }
+        }
+        no_parente = no_parente->getParent();
+    }
+    return true;
+}
+
+// metodo que checa se uma possivel insercao eh valida
+bool insercaoEhValida(int possivel_numero, int pos_x, int pos_y, Matrix &sudoku_board, Node *no_parente) {
+    if(!insercaoEhValidaNaPosicao(possivel_numero, pos_x, pos_y, sudoku_board)) {
+        return false;
+    }
+    if(!insercaoEhValidaPorParentes(possivel_numero, pos_x, pos_y, sudoku_board, no_parente)) {
+        return false;
+    }
+    return true;
+}
 
 // metodo que expande um no respeitando regras do sudoku
 bool expandirNoBFS(Node* &no_corrente, queue<Node*> &nao_expandidos, Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, Matrix &numeros_possiveis) {
