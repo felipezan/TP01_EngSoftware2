@@ -18,19 +18,12 @@ using std::endl;
 using std::vector;
 using std::string;
 using std::pair;
-using std::make_pair;
-using std::queue;
-using std::list;
-using std::stringstream;
-using std::reverse;
-using std::priority_queue;
-using std::deque;
 
 class Node {
     private:
         Node* parent_node;
         int nivel;
-        list<Node*> child_nodes;
+        std::list<Node*> child_nodes;
         int matrix_i_position;
         int matrix_j_position;
         int weight;
@@ -61,7 +54,7 @@ class Node {
         }
 
         // retorna lista de filhos
-        const list<Node*>& getChildren() const {
+        const std::list<Node*>& getChildren() const {
             return child_nodes;
         }
 
@@ -88,7 +81,7 @@ class Node {
         // segunda versao print tree
         void printTree2(int level = 0) const {
 
-            stringstream ss;
+            std::stringstream ss;
 
             // no atual com info de nivel
             ss << "Level " << level << ": (" << weight << ")[" << matrix_i_position << "][" << matrix_j_position << "] -----> Children: ";
@@ -133,7 +126,6 @@ class Node {
 
 };
 
-
 // definindo tipo matrix como vector de vectors para uma sintaxe mais clara
 typedef vector<vector<int>> Matrix;
 
@@ -143,12 +135,6 @@ static const int QUANT_LINHAS = 9;
 static const int QUANT_COLUNAS = 9;
 static const int TAMANHO_SUBDVISOES_LINHAS = 3;
 static const int TAMANHO_SUBDVISOES_COLUNAS = 3;
-/*
-static const int QUANT_LINHAS = 4;
-static const int QUANT_COLUNAS = 4;
-static const int TAMANHO_SUBDVISOES_LINHAS = 2;
-static const int TAMANHO_SUBDVISOES_COLUNAS = 2;
- */
 
 // definindo metodos
 void printMatrix(Matrix &matriz, string mensagem);
@@ -227,11 +213,11 @@ void testPrint(string mensagem) {
 } // fim do metodo testPrint
 
 // metodo pra printar fila de nao expandidos
-void printNaoExpandidosBFS(const queue<Node*>& queue_src, string mensagem) {
+void printNaoExpandidosBFS(const std::queue<Node*>& queue_src, string mensagem) {
     bool debug = false;
     if(!queue_src.empty()) {
         if(debug) cout<<mensagem<<" Fila de nos nao expandidos:";
-        queue<Node*> tempQueue = queue_src;
+        std::queue<Node*> tempQueue = queue_src;
         while (!tempQueue.empty()) { // enquanto nao vazia
             cout<<tempQueue.front()->getWeight() << "["<<tempQueue.front()->getIPosition()<<"]["<<tempQueue.front()->getJPosition()<<"] - "; // pega o primeiro e printa 
             tempQueue.pop(); // remove o primeiro
@@ -242,14 +228,13 @@ void printNaoExpandidosBFS(const queue<Node*>& queue_src, string mensagem) {
     }
 } // fim do metodo printNaoExpandidosBFS
 
-
 // metodo pra printar fila ordenada ids de nao expandidos
-void printNaoExpandidosIDS(deque<Node*> queue_src, string mensagem) {
+void printNaoExpandidosIDS(std::deque<Node*> queue_src, string mensagem) {
     bool debug = false;
     int i = 0;
     if(!queue_src.empty()) {
         if(debug) cout<<mensagem<<" Fila de nos nao expandidos:";
-        deque<Node*> tempQueue = queue_src;
+        std::deque<Node*> tempQueue = queue_src;
         while (!tempQueue.empty()) { // enquanto nao vazia
             if(debug && i > 0) cout << " - ";
             i++;
@@ -261,6 +246,7 @@ void printNaoExpandidosIDS(deque<Node*> queue_src, string mensagem) {
         if(debug) cout<<"Fila atualmente esta vazia!"<<endl;
     }
 } // fim do metodo printNaoExpandidosIDS
+
 
 void printCaminhoProNo(Node *no_parente) {
     Node* new_parent_debug = no_parente;
@@ -277,7 +263,7 @@ void preencherMatrixResultado3(Matrix &sudoku_board, Node *no_corrente) {
         caminho.push_back(no_corrente);
         no_corrente = no_corrente->getParent();
     }
-    reverse(caminho.begin(), caminho.end());
+    std::reverse(caminho.begin(), caminho.end());
     for (Node *no : caminho) {
         if (no->getWeight() != -1) {
             sudoku_board[no->getIPosition()][no->getJPosition()] = no->getWeight();
@@ -375,36 +361,47 @@ bool insercaoEhValida(int possivel_numero, int pos_x, int pos_y, Matrix &sudoku_
     return true;
 }
 
-// metodo que expande um no respeitando regras do sudoku
-bool expandirNoBFS(Node* &no_corrente, queue<Node*> &nao_expandidos, Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, Matrix &numeros_possiveis) {
-    int no_corrente_indice = no_corrente->getNivel(); // pegando indice do no corrente
-    bool debug = false;
-    bool posso_inserir_numero = true;
-    int possivel_numero = -999;
-    int pos_x = -999;
-    int pos_y = -999;
-    bool um_ou_mais_nos_criados = false;
-    for(int j = 0; j < QUANT_COLUNAS; j++) { // para cada possivel numero que podemos inserir nesse no
-        possivel_numero = numeros_possiveis[no_corrente_indice][j];
-        pos_x = vec_posicoes_vazias[no_corrente_indice].first;
-        pos_y = vec_posicoes_vazias[no_corrente_indice].second;
-        posso_inserir_numero = insercaoEhValida(possivel_numero, pos_x, pos_y, sudoku_board, no_corrente);
-        if(posso_inserir_numero) {
+// metodo que gera nos filhos
+vector<Node*> generateChildNodes(Node* no_corrente, Matrix &sudoku_board, const vector<pair<int, int>> &vec_posicoes_vazias, const Matrix &numeros_possiveis) {
+    vector<Node*> child_nodes;
+    int no_corrente_indice = no_corrente->getNivel();
+    int pos_x = vec_posicoes_vazias[no_corrente_indice].first;
+    int pos_y = vec_posicoes_vazias[no_corrente_indice].second;
+
+    for(int j = 0; j < QUANT_COLUNAS; j++) {
+        int possivel_numero = numeros_possiveis[no_corrente_indice][j];
+        if(insercaoEhValida(possivel_numero, pos_x, pos_y, sudoku_board, no_corrente)) {
             Node* no_filho = new Node(no_corrente, no_corrente->getNivel() + 1, pos_x, pos_y, possivel_numero);
             no_corrente->addChild(no_filho);
-            nao_expandidos.push(no_filho);
-            if(debug) printNaoExpandidosBFS(nao_expandidos, "IDS - ");
-            um_ou_mais_nos_criados = true;
-        } 
+            child_nodes.push_back(no_filho);
+        }
     }
-    return um_ou_mais_nos_criados;
-} // fim do metodo expandirNoBFS
+    return child_nodes;
+}
+
+// metodo que expande um no durante a BFS respeitando regras do sudoku
+bool expandirNoBFS(Node* &no_corrente, std::queue<Node*> &nao_expandidos, Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, Matrix &numeros_possiveis) {
+    vector<Node*> child_nodes = generateChildNodes(no_corrente, sudoku_board, vec_posicoes_vazias, numeros_possiveis);
+    for (Node* child : child_nodes) {
+        nao_expandidos.push(child);
+    }
+    return !child_nodes.empty();
+}
+
+// metodo que expande um no durante a IDS respeitando regras do sudoku
+bool expandirNoIDS(Node* &no_corrente, std::deque<Node*> &nao_expandidos, Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, Matrix &numeros_possiveis, int &menor_nivel_atual) {
+    vector<Node*> child_nodes = generateChildNodes(no_corrente, sudoku_board, vec_posicoes_vazias, numeros_possiveis);
+    for (Node* child : child_nodes) {
+        nao_expandidos.push_back(child);
+    }
+    return !child_nodes.empty();
+}
 
 // metodo que performa a busca em largura 
 int breadth_first_search(Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, int quant_posicoes_vazias, Matrix &numeros_possiveis) {
 
     // criando fila de nos nao expandidos
-    queue<Node*> nao_expandidos;
+    std::queue<Node*> nao_expandidos;
 
     // criando no raiz
     Node* raiz = new Node(NULL, 0, vec_posicoes_vazias[0].first, vec_posicoes_vazias[0].second, -1);
@@ -449,39 +446,14 @@ int breadth_first_search(Matrix &sudoku_board, vector<pair<int, int>> &vec_posic
  
 } // fim do metodo breadth_first_search
 
-// metodo que expande um no respeitando regras do sudoku
-bool expandirNoDFS(Node* &no_corrente, deque<Node*> &nao_expandidos, Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, Matrix &numeros_possiveis, int &menor_nivel_atual) {
-    bool debug = false;
-    int no_corrente_indice = no_corrente->getNivel(); // pegando indice do no corrente
-    bool posso_inserir_numero = true;
-    int possivel_numero = -999;
-    int pos_x = -999;
-    int pos_y = -999;
-    bool um_ou_mais_nos_criados = false;
-    for(int j = 0; j < QUANT_COLUNAS; j++) { // para cada possivel numero que podemos inserir nesse no
-        possivel_numero = numeros_possiveis[no_corrente_indice][j];
-        pos_x = vec_posicoes_vazias[no_corrente_indice].first;
-        pos_y = vec_posicoes_vazias[no_corrente_indice].second;
-        posso_inserir_numero = insercaoEhValida(possivel_numero, pos_x, pos_y, sudoku_board, no_corrente);
-        if(posso_inserir_numero) {
-            Node* no_filho = new Node(no_corrente, no_corrente->getNivel() + 1, pos_x, pos_y, possivel_numero);
-            no_corrente->addChild(no_filho);
-            nao_expandidos.push_back(no_filho);
-            if(debug) printNaoExpandidosIDS(nao_expandidos, "IDS - ");
-            um_ou_mais_nos_criados = true;
-        } 
-    }
-    return um_ou_mais_nos_criados;
-} // fim do metodo expandirNoDFS
-
 // metodo que performa a busca em profundidade 
 int iterative_deepening_seach(Matrix &sudoku_board, vector<pair<int, int>> &vec_posicoes_vazias, int quant_posicoes_vazias, Matrix &numeros_possiveis) {
 
     // pra fins de debug
     bool debug = false;
 
-    // criando deque de nos nao expandidos
-    deque<Node*> nao_expandidos;
+    // criando std::deque de nos nao expandidos
+    std::deque<Node*> nao_expandidos;
 
     // criando no raiz
     Node* raiz = new Node(NULL, 0, vec_posicoes_vazias[0].first, vec_posicoes_vazias[0].second, -1);
@@ -490,7 +462,7 @@ int iterative_deepening_seach(Matrix &sudoku_board, vector<pair<int, int>> &vec_
     nao_expandidos.push_back(raiz);
 
     Node* no_corrente;
-    bool sucesso_dfs = false;
+    bool sucesso_ids = false;
     bool um_ou_mais_nos_criados = false;
     int quant_nos_nivel = 1;
     int quant_estados_expandidos = 0;
@@ -529,12 +501,12 @@ int iterative_deepening_seach(Matrix &sudoku_board, vector<pair<int, int>> &vec_
 
         // se ja atravessamos todas as posicoes vazias e nao sobrou nada
         if(no_corrente->getNivel() == quant_posicoes_vazias) { 
-            sucesso_dfs = true; // sudoku resolvido, imprimir solução
+            sucesso_ids = true; // sudoku resolvido, imprimir solução
             break;
         }
 
         // expandindo no e inserindo novos nos na lista de nao expandidos
-        um_ou_mais_nos_criados = expandirNoDFS(no_corrente, nao_expandidos, sudoku_board, vec_posicoes_vazias, numeros_possiveis, menor_nivel_atual);
+        um_ou_mais_nos_criados = expandirNoIDS(no_corrente, nao_expandidos, sudoku_board, vec_posicoes_vazias, numeros_possiveis, menor_nivel_atual);
 
         // incrementando contagem de estados expandidos
         quant_estados_expandidos++;
@@ -543,10 +515,10 @@ int iterative_deepening_seach(Matrix &sudoku_board, vector<pair<int, int>> &vec_
 
     }
 
-    if(sucesso_dfs) {
+    if(sucesso_ids) {
         preencherMatrixResultado1(sudoku_board, no_corrente); 
     } else {
-        cout<<"Fracasso na DFS! Sudoku não resolvido" << endl;
+        cout<<"Fracasso na IDS! Sudoku não resolvido" << endl;
     }
 
     return quant_estados_expandidos;
@@ -561,7 +533,8 @@ void verifica_insercao_correta(Matrix &sudoku_board,  Matrix &linha_numeros_poss
     printMatrix(numeros_possiveis, "Matriz numeros_possiveis Final:");
 } // fim do metodo verifica_insercao_correta
 
-bool validateInputParameters(int argc, char **argv) {
+// metodo que faz a validacao dos parametros de entrada do programa
+bool validaParametrosEntrada(int argc, char **argv) {
     if((argc != (2+QUANT_LINHAS) && argc != 3) || (argc == 3 && (strlen(argv[2]) != (QUANT_LINHAS * QUANT_COLUNAS)))) {
         cout<<"Uso incorreto dos parametros de entrada!"<<endl;
         cout<<"Uso correto: TP1 [inicial do algoritmo de pesquisa] [configuracao sudoku em " << (QUANT_LINHAS * QUANT_COLUNAS) << " numeros separados por espaço a cada " << QUANT_LINHAS << " numeros]" << endl; 
@@ -578,9 +551,10 @@ bool validateInputParameters(int argc, char **argv) {
         }
     }
     return true;
-}
+} // fim do metodo validaParametrosEntrada
 
-void initializeSudokuBoard(Matrix &sudoku_board, Matrix &linha_numeros_possiveis, Matrix &coluna_numeros_possiveis, vector<pair<int, int>> &vec_posicoes_vazias, int &quant_posicoes_vazias, int argc, char **argv) {
+// metodo que faz a insercao dos valores do tabuleiro do sudoku na matriz correspondente
+void inicializaTabuleiroSudoku(Matrix &sudoku_board, Matrix &linha_numeros_possiveis, Matrix &coluna_numeros_possiveis, vector<pair<int, int>> &vec_posicoes_vazias, int &quant_posicoes_vazias, int argc, char **argv) {
     int k = 0;
     for(int i = 0; i < QUANT_LINHAS; i++) {
         for(int j = 0; j < QUANT_COLUNAS; j++) {
@@ -593,22 +567,24 @@ void initializeSudokuBoard(Matrix &sudoku_board, Matrix &linha_numeros_possiveis
             linha_numeros_possiveis[i][sudoku_board[i][j] - 1] = 0;
             coluna_numeros_possiveis[j][sudoku_board[i][j] - 1] = 0;
             if(sudoku_board[i][j] == 0) {
-                vec_posicoes_vazias.push_back(make_pair(i, j)); // inserindo posicao vazia que temos que usar
+                vec_posicoes_vazias.push_back(std::make_pair(i, j)); // inserindo posicao vazia que temos que usar
                 quant_posicoes_vazias++;
             }
         }
     }    
-}
+} // fim do metodo inicializaTabuleiroSudoku
 
-void excludeNumbersBasedOnRows(Matrix &numeros_possiveis, const Matrix &linha_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
+// metodo que exclui possibilidades de numeros baseado em numeros ja existente nas mesmas linhas
+void excluiNumerosBaseadoEmLinhas(Matrix &numeros_possiveis, const Matrix &linha_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
     for(int i = 0; i < vec_posicoes_vazias.size(); i++) {
         for(int j = 0; j < QUANT_COLUNAS; j++) {
             numeros_possiveis[i][j] = linha_numeros_possiveis[vec_posicoes_vazias[i].first][j];
         }
     }
-}
+} // fim do metodo excluiNumerosBaseadoEmLinhas
 
-void excludeNumbersBasedOnColumns(Matrix &numeros_possiveis, const Matrix &coluna_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
+// metodo que exclui possibilidades de numeros baseado em numeros ja existente nas mesmas colunas
+void excluiNumerosBaseadoEmColunas(Matrix &numeros_possiveis, const Matrix &coluna_numeros_possiveis, const vector<pair<int, int>> &vec_posicoes_vazias) {
     for(int i = 0; i < vec_posicoes_vazias.size(); i++) {
         for(int j = 0; j < QUANT_COLUNAS; j++) {
             if(coluna_numeros_possiveis[vec_posicoes_vazias[i].second][j] == 0) {
@@ -616,9 +592,10 @@ void excludeNumbersBasedOnColumns(Matrix &numeros_possiveis, const Matrix &colun
             }
         }
     }
-}
+} // fim do metodo excluiNumerosBaseadoEmColunas
 
-void excludeNumbersBasedOnSubdivisions(Matrix &numeros_possiveis, const Matrix &sudoku_board, const vector<pair<int, int>> &vec_posicoes_vazias) {
+// metodo que exclui possibilidades de numeros baseado em numeros ja existente nas mesmas subdivisoes
+void excluiNumerosBaseadoEmSubdivisoes(Matrix &numeros_possiveis, const Matrix &sudoku_board, const vector<pair<int, int>> &vec_posicoes_vazias) {
     for(int k = 0; k < vec_posicoes_vazias.size(); k++) {
         int i_start_pos = vec_posicoes_vazias[k].first - (vec_posicoes_vazias[k].first % TAMANHO_SUBDVISOES_LINHAS);
         int i_end_pos = i_start_pos + TAMANHO_SUBDVISOES_LINHAS - 1;
@@ -632,11 +609,12 @@ void excludeNumbersBasedOnSubdivisions(Matrix &numeros_possiveis, const Matrix &
             }
         }
     }
-}
+} // fim do metodo excluiNumerosBaseadoEmSubdivisoes
 
+// metodo que inicia o programa
 int main(int argc, char **argv) {
 
-    if (!validateInputParameters(argc, argv)) {
+    if (!validaParametrosEntrada(argc, argv)) {
         return 1;
     }
 
@@ -653,12 +631,12 @@ int main(int argc, char **argv) {
         }
     }
 
-    initializeSudokuBoard(sudoku_board, linha_numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias, quant_posicoes_vazias, argc, argv);
+    inicializaTabuleiroSudoku(sudoku_board, linha_numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias, quant_posicoes_vazias, argc, argv);
 
     Matrix numeros_possiveis(quant_posicoes_vazias, vector<int>(QUANT_COLUNAS, 0));
-    excludeNumbersBasedOnRows(numeros_possiveis, linha_numeros_possiveis, vec_posicoes_vazias);
-    excludeNumbersBasedOnColumns(numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias);
-    excludeNumbersBasedOnSubdivisions(numeros_possiveis, sudoku_board, vec_posicoes_vazias);
+    excluiNumerosBaseadoEmLinhas(numeros_possiveis, linha_numeros_possiveis, vec_posicoes_vazias);
+    excluiNumerosBaseadoEmColunas(numeros_possiveis, coluna_numeros_possiveis, vec_posicoes_vazias);
+    excluiNumerosBaseadoEmSubdivisoes(numeros_possiveis, sudoku_board, vec_posicoes_vazias);
 
     verifica_insercao_correta(sudoku_board, linha_numeros_possiveis, coluna_numeros_possiveis, numeros_possiveis);
 
@@ -682,4 +660,4 @@ int main(int argc, char **argv) {
     printResultado(quant_estados_espandidos, total_tempo_programa.count(), sudoku_board);
 
     return 0;
-}
+} // fim do metodo main
